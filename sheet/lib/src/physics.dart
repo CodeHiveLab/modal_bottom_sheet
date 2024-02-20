@@ -76,6 +76,8 @@ class BouncingSheetPhysics extends ScrollPhysics with SheetPhysics {
     assert(position.minScrollExtent <= position.maxScrollExtent);
 
     if (!position.outOfRange) {
+      /// 向上丢掷的时候, 不要一下丢很远
+      if (offset < 0) return math.max(-10, offset);
       return offset;
     }
 
@@ -95,7 +97,9 @@ class BouncingSheetPhysics extends ScrollPhysics with SheetPhysics {
         : frictionFactor(overscrollPast / position.viewportDimension);
     final double direction = offset.sign;
 
-    return direction * _applyFriction(overscrollPast, offset.abs(), friction);
+    /// 把位移量控制住, 不要几下就移动了很远
+    double ret = direction * _applyFriction(overscrollPast, offset.abs(), friction);
+    return math.max(ret, -0.2);
   }
 
   static double _applyFriction(
@@ -118,49 +122,6 @@ class BouncingSheetPhysics extends ScrollPhysics with SheetPhysics {
 
   @override
   double applyBoundaryConditions(ScrollMetrics position, double value) {
-    assert(() {
-      if (value == position.pixels) {
-        throw FlutterError.fromParts(<DiagnosticsNode>[
-          ErrorSummary(
-              '$runtimeType.applyBoundaryConditions() was called redundantly.'),
-          ErrorDescription(
-            'The proposed new position, $value, is exactly equal to the current position of the '
-            'given ${position.runtimeType}, ${position.pixels}.\n'
-            'The applyBoundaryConditions method should only be called when the value is '
-            'going to actually change the pixels, otherwise it is redundant.',
-          ),
-          DiagnosticsProperty<ScrollPhysics>(
-              'The physics object in question was', this,
-              style: DiagnosticsTreeStyle.errorProperty),
-          DiagnosticsProperty<ScrollMetrics>(
-              'The position object in question was', position,
-              style: DiagnosticsTreeStyle.errorProperty),
-        ]);
-      }
-      return true;
-    }());
-    if (!overflowViewport) {
-      // overscroll
-      if (position.viewportDimension <= position.pixels &&
-          position.pixels < value) {
-        return value - position.pixels;
-      }
-      // hit top edge
-      if (value < position.viewportDimension &&
-          position.viewportDimension < position.pixels) {
-        return value - position.viewportDimension;
-      }
-    }
-    // underscroll
-    if (value < position.pixels &&
-        position.pixels <= position.minScrollExtent) {
-      return value - position.pixels;
-    }
-    // hit bottom edge
-    if (position.pixels < position.maxScrollExtent &&
-        position.maxScrollExtent < value) {
-      return value - position.maxScrollExtent;
-    }
     return 0.0;
   }
 
@@ -175,7 +136,8 @@ class BouncingSheetPhysics extends ScrollPhysics with SheetPhysics {
           damping: 25,
         ),
         position: position.pixels,
-        velocity: velocity,
+        /// 不要被丢的太远了
+        velocity: 200,
         leadingExtent: position.minScrollExtent,
         trailingExtent: position.maxScrollExtent,
         tolerance: toleranceFor(position),
@@ -446,7 +408,7 @@ class SnapSheetPhysics extends ScrollPhysics with SheetPhysics {
         const SpringDescription(damping: 25, stiffness: 200, mass: 1.2),
         position.pixels,
         target,
-        velocity.clamp(-200, 200),
+        velocity,
         tolerance: tolerance,
       );
     }
