@@ -76,7 +76,9 @@ class BouncingSheetPhysics extends ScrollPhysics with SheetPhysics {
     assert(position.minScrollExtent <= position.maxScrollExtent);
 
     if (!position.outOfRange) {
-      /// 向上丢掷的时候, 不要一下丢很远
+      /// 向上拖拽并且持续拖拽到范围外的时候, 阻止页面立即被拖拽超出范围很多
+      /// 第一次被拖拽到范围外时触发
+      /// 在范围外的拖拽由下方的阻尼效果来阻尼
       if (offset < 0) return math.max(-10, offset);
       return offset;
     }

@@ -76,6 +76,7 @@ class SheetPrimaryScrollPosition extends ScrollPositionWithSingleContext {
   });
 
   final SheetContext sheetContext;
+
   SheetPosition get sheetPosition => sheetContext.position;
 
   bool sheetShouldSheetAcceptUserOffset(double delta) {
@@ -83,12 +84,10 @@ class SheetPrimaryScrollPosition extends ScrollPositionWithSingleContext {
     final bool canDragForward = delta >= 0 && pixels <= minScrollExtent;
 
     // Can drag up if sheet is not yet on top and list is already on top
-    final bool canDragBackwards = delta < 0 &&
-        sheetPosition.pixels < sheetPosition.maxScrollExtent &&
-        pixels <= minScrollExtent;
+    final bool canDragBackwards =
+        delta < 0 && sheetPosition.pixels < sheetPosition.maxScrollExtent && pixels <= minScrollExtent;
 
-    return sheetPosition.physics.shouldAcceptUserOffset(sheetPosition) &&
-        (canDragForward || canDragBackwards);
+    return sheetPosition.physics.shouldAcceptUserOffset(sheetPosition) && (canDragForward || canDragBackwards);
   }
 
   @override
@@ -100,10 +99,8 @@ class SheetPrimaryScrollPosition extends ScrollPositionWithSingleContext {
       if (sheetPosition.activity is! _SheetScrollActivity) {
         sheetPosition.beginActivity(_SheetScrollActivity(sheetPosition));
       }
-      final double sheetDelta =
-          sheetPosition.physics.applyPhysicsToUserOffset(sheetPosition, delta);
+      final double sheetDelta = sheetPosition.physics.applyPhysicsToUserOffset(sheetPosition, delta);
       sheetPosition.applyUserOffset(sheetDelta);
-      return;
     } else {
       super.applyUserOffset(delta);
       if (sheetPosition.activity is! HoldScrollActivity) {
@@ -119,13 +116,15 @@ class SheetPrimaryScrollPosition extends ScrollPositionWithSingleContext {
       return;
     }
 
-    if (sheetPosition.hasContentDimensions) {
+    /// 解决弹不起来的问题
+    /// 页面当中有异步数据, 导致页面重新渲染, goBallistic 多回调一次
+    /// 多回调那次, hasContentDimensions 是 true, 就会执行 sheetPosition.goBallistic(velocity);
+    /// 让页面又藏起来, 所以增加了判断
+    if (sheetPosition.pixels != 1.0 && sheetPosition.hasContentDimensions) {
       sheetPosition.goBallistic(velocity);
     }
 
-    if (velocity > 0.0 &&
-            sheetPosition.pixels >= sheetPosition.maxScrollExtent ||
-        (velocity < 0.0 && pixels > 0)) {
+    if (velocity > 0.0 && sheetPosition.pixels >= sheetPosition.maxScrollExtent || (velocity < 0.0 && pixels > 0)) {
       super.goBallistic(velocity);
       return;
     } else if (outOfRange) {

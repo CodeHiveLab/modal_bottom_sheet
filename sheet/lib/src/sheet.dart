@@ -782,12 +782,16 @@ class RenderSheetViewport extends RenderBox
       double maxHeight = maxExtent.clamp(0, constraints.maxHeight);
       double minHeight = expand ? maxHeight : 0;
 
-      if (isOverflow) {
-        final double overflowHeight =
-            _childExtentBeforeOverflow! + offset.pixels;
-        maxHeight = overflowHeight;
-        minHeight = overflowHeight;
-      }
+      /// 内容由很高的时候 && sheet 在顶部的时候
+      /// 拖拽 sheet 下移 -> 拖拽 sheet 快速上移并持续移动直至超过范围, 造成 isOverflow 为 true
+      /// 这时 内容的 child 的 scroll max extent 会被设置为 0, 导致内容无法滚动
+      /// 不知道这段代码的作用是什么, 去掉没有发现问题, 暂时去掉以解决无法滚动的问题
+      // if (isOverflow) {
+      //   final double overflowHeight =
+      //       _childExtentBeforeOverflow! + offset.pixels;
+      //   maxHeight = overflowHeight;
+      //   minHeight = overflowHeight;
+      // }
 
       final BoxConstraints childConstraints = BoxConstraints(
         minHeight: minHeight,
