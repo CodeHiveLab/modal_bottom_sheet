@@ -91,7 +91,7 @@ class SheetPrimaryScrollPosition extends ScrollPositionWithSingleContext {
     return sheetPosition.physics.shouldAcceptUserOffset(sheetPosition) && (canDragForward || canDragBackwards);
   }
 
-  bool get outOfInit => DateTime.now().millisecondsSinceEpoch - _initTimestamp > 200;
+  bool get outOfInit => DateTime.now().millisecondsSinceEpoch - _initTimestamp > 1000;
 
   @override
   void applyUserOffset(double delta) {
