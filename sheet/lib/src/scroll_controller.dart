@@ -76,6 +76,7 @@ class SheetPrimaryScrollPosition extends ScrollPositionWithSingleContext {
   });
 
   final SheetContext sheetContext;
+  final int _initTimestamp = DateTime.now().millisecondsSinceEpoch;
 
   SheetPosition get sheetPosition => sheetContext.position;
 
@@ -89,6 +90,8 @@ class SheetPrimaryScrollPosition extends ScrollPositionWithSingleContext {
 
     return sheetPosition.physics.shouldAcceptUserOffset(sheetPosition) && (canDragForward || canDragBackwards);
   }
+
+  bool get outOfInit => DateTime.now().millisecondsSinceEpoch - _initTimestamp > 200;
 
   @override
   void applyUserOffset(double delta) {
@@ -120,7 +123,7 @@ class SheetPrimaryScrollPosition extends ScrollPositionWithSingleContext {
     /// 页面当中有异步数据, 导致页面重新渲染, goBallistic 多回调一次
     /// 多回调那次, hasContentDimensions 是 true, 就会执行 sheetPosition.goBallistic(velocity);
     /// 让页面又藏起来, 所以增加了判断
-    if (sheetPosition.pixels != 1.0 && sheetPosition.hasContentDimensions) {
+    if (outOfInit && sheetPosition.hasContentDimensions) {
       sheetPosition.goBallistic(velocity);
     }
 
